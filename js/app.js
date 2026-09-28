@@ -217,6 +217,10 @@ function progressLine(list) {
 
 /* ------------------ views ------------------ */
 
+const MODE_ICONS = {
+  tiles: '🀄', rack: '🀫', charleston: '🔄', call: '🗣️', joker: '🃏', error: '🔍', pattern: '✏️'
+};
+
 function viewHome() {
   const frag = document.createDocumentFragment();
   frag.appendChild(pageHeading('Choose something to practise'));
@@ -224,8 +228,9 @@ function viewHome() {
   const ul = el('ul', { class: 'mode-grid' });
   for (const m of MODES) {
     ul.appendChild(el('li', {}, [
-      el('a', { class: 'btn', href: '#/' + m.key }, [
-        el('span', {}, [el('strong', { text: m.title }), el('span', { class: 'blurb', text: m.blurb })])
+      el('a', { class: 'mode-card', href: '#/' + m.key }, [
+        el('span', { class: 'mode-icon', 'aria-hidden': 'true', text: MODE_ICONS[m.key] || '•' }),
+        el('span', { class: 'mode-text' }, [el('strong', { text: m.title }), el('span', { class: 'blurb', text: m.blurb })])
       ])
     ]));
   }
