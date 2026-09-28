@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Developer tests — Mah Jongg Practice</title>
+<style>
+  body { font-family: system-ui, sans-serif; margin: 2rem; line-height: 1.5; color: #111; }
+  h1 { font-size: 1.4rem; }
+  #summary { font-size: 1.2rem; font-weight: bold; padding: 0.5rem 0.75rem; border-left: 8px solid #444; }
+  #summary.pass { border-left-color: #14532D; }
+  #summary.fail { border-left-color: #7A1C10; }
+  ul { padding-left: 1.2rem; }
+  li { margin: 0.2rem 0; font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 0.9rem; }
+  li.pass::marker { content: "\2713  "; }
+  li.fail { color: #7A1C10; font-weight: bold; }
+  li.fail::marker { content: "\2715  "; }
+  .note { background: #F4EDE2; padding: 0.75rem 1rem; border: 2px solid #8A7F6D; border-radius: 8px; }
+</style>
+</head>
+<body>
+<h1>Developer tests</h1>
+<p class="note">This page is for development only and is not linked from the app.
+It must be served over HTTP (for example <code>python3 -m http.server</code>) because it uses ES modules.</p>
+<p id="summary">Running…</p>
+<ul id="results"></ul>
+<script type="module" src="./tests.js"></script>
+</body>
+</html>

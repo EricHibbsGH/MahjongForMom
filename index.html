@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mah Jongg Practice</title>
+<meta name="description" content="A calm, accessible practice app for American Mah Jongg mechanics.">
+<link rel="stylesheet" href="./styles.css?v=1">
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to main content</a>
+
+<header class="app-header">
+  <div class="header-row">
+    <h1>Mah Jongg Practice</h1>
+    <nav aria-label="Main">
+      <a class="btn btn-home" href="#/home" id="home-link">Home</a>
+      <a class="btn" href="#/settings">Settings</a>
+    </nav>
+  </div>
+</header>
+
+<main id="main" tabindex="-1">
+  <div id="storage-notice" class="notice" hidden></div>
+  <div id="view" class="view"></div>
+  <p id="live" class="live-region" aria-live="polite"></p>
+</main>
+
+<footer class="app-footer">
+  <p><strong>Please note:</strong> This is an independent practice tool. It is not affiliated with,
+  sponsored by, or endorsed by the National Mah Jongg League. No annual card is reproduced here.
+  Your current official card and official rulings are always the final authority.</p>
+</footer>
+
+<dialog id="confirm-dialog" aria-labelledby="confirm-title">
+  <h2 id="confirm-title">Delete saved information?</h2>
+  <p id="confirm-text">This will remove your saved settings and any patterns you typed in. This cannot be undone.</p>
+  <div class="dialog-actions">
+    <button type="button" class="btn" id="confirm-cancel" autofocus>Cancel, keep my information</button>
+    <button type="button" class="btn btn-danger" id="confirm-ok">Yes, delete everything</button>
+  </div>
+</dialog>
+
+<script type="module" src="./js/app.js?v=1"></script>
+</body>
+</html>
