@@ -391,6 +391,46 @@ export function detectIllegalState(gameState = {}) {
   };
 }
 
+/* ---------- Distance to a target hand ---------- */
+
+// STABLE: how many more tiles a rack needs to complete a target hand.
+// `groups` is a list of { typeId, size } that together make 14 tiles.
+// Jokers fill only slots in groups of three or more, and only when the hand
+// permits Jokers. Real tiles are spent on pairs and singles first, because a
+// Joker can never fill those slots.
+export function tilesAway(rack, groups, opts = {}) {
+  const cardAllowsJoker = opts.cardAllowsJoker !== false;
+  const have = countByType(rack.filter((t) => t.typeId !== 'joker'));
+  const jokers = cardAllowsJoker ? rack.filter((t) => t.typeId === 'joker').length : 0;
+  const need = Object.create(null);
+  for (const g of groups) {
+    const n = need[g.typeId] || (need[g.typeId] = { small: 0, large: 0 });
+    if (g.size >= 3) n.large += g.size; else n.small += g.size;
+  }
+  let missingSmall = 0;
+  let missingLarge = 0;
+  const missing = [];
+  for (const typeId of Object.keys(need)) {
+    const n = need[typeId];
+    let h = have[typeId] || 0;
+    const gapSmall = Math.max(0, n.small - h);
+    h = Math.max(0, h - n.small);
+    const gapLarge = Math.max(0, n.large - h);
+    missingSmall += gapSmall;
+    missingLarge += gapLarge;
+    if (gapSmall + gapLarge > 0) missing.push({ typeId, count: gapSmall + gapLarge, jokerEligible: gapLarge });
+  }
+  const jokersUsed = Math.min(jokers, missingLarge);
+  return {
+    away: missingSmall + missingLarge - jokersUsed,
+    missing,
+    jokersUsed,
+    jokersUnused: jokers - jokersUsed,
+    missingSmall,
+    missingLarge
+  };
+}
+
 /* ---------- User-entered pattern (never annual card data) ---------- */
 
 // The pattern is a list of 14 typeIds the user typed in from their own card.

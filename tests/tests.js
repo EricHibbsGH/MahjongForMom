@@ -7,11 +7,12 @@ import {
 import {
   validateCopyCounts, validateRackSize, classifyGroup, isJokerAllowedInGroup,
   canCallDiscard, validateJokerExchange, validateCharlestonPass,
-  validateExposure, detectIllegalState, validateAgainstUserPattern,
+  validateExposure, detectIllegalState, validateAgainstUserPattern, tilesAway,
   RESULT_CODES, TABLE_CONVENTIONS
 } from '../js/rules.js';
 
-import { ALL_SCENARIOS, scenariosForMode } from '../js/scenarios.js';
+import { ALL_SCENARIOS, scenariosForMode, MODES } from '../js/scenarios.js';
+import { FAMILIES, LESSONS, identifyFamily, handSize, groupTiles, normalizeGroups } from '../js/content.js';
 
 const results = [];
 function test(name, fn) {
@@ -273,6 +274,80 @@ test('every find-the-error scenario really is illegal', () => {
       phase: s.state.phase
     });
     assert(!res.ok, s.id + ' was expected to be illegal but the engine found no problem');
+  }
+});
+
+/* ---- tiles away ---- */
+const EVENS = [{ typeId: 'flower', size: 2 }, { typeId: 'dots-2', size: 3 }, { typeId: 'dots-4', size: 3 }, { typeId: 'bams-6', size: 4 }, { typeId: 'bams-8', size: 2 }];
+test('tilesAway counts missing tiles', () => {
+  const rack = hydrate(['flower','flower','dots-2','dots-2','dots-2','dots-4','dots-4','bams-6','bams-6','bams-6','bams-8','craks-9','wind-north']);
+  assertEqual(tilesAway(rack, EVENS).away, 3);
+});
+test('tilesAway lets jokers fill pungs and kongs', () => {
+  const rack = hydrate(['flower','flower','dots-2','dots-2','joker','dots-4','dots-4','dots-4','bams-6','bams-6','joker','bams-8','bams-8']);
+  const r = tilesAway(rack, EVENS);
+  assertEqual(r.away, 1); assertEqual(r.jokersUsed, 2);
+});
+test('tilesAway never lets a joker fill a pair', () => {
+  const rack = hydrate(['joker','joker','joker','joker','dots-2','dots-2','dots-2','dots-4','dots-4','dots-4','bams-6','bams-6','bams-6']);
+  const r = tilesAway(rack, EVENS);
+  assert(r.missingSmall === 4, 'flower pair and 8 Bam pair are missing');
+  assertEqual(r.away, 4);
+});
+test('tilesAway ignores jokers when the hand forbids them', () => {
+  const rack = hydrate(['joker','joker','dots-2','dots-2','dots-2','dots-4','dots-4','dots-4','bams-6','bams-6','bams-6','bams-6','flower']);
+  assertEqual(tilesAway(rack, EVENS, { cardAllowsJoker: false }).away, 3);
+});
+
+/* ---- teaching content ---- */
+test('every family example is a legal 14-tile hand of its own family', () => {
+  for (const f of FAMILIES) {
+    assertEqual(handSize(f.example.groups), 14, f.id + ' size');
+    assertEqual(identifyFamily(f.example.groups), f.id, f.id + ' classification');
+    assert(validateCopyCounts(hydrate(f.example.groups.flatMap(groupTiles))).ok, f.id + ' copy counts');
+  }
+});
+test('every lesson has content and a known practice mode', () => {
+  for (const l of LESSONS) {
+    assert(l.id && l.title && l.blocks.length, 'incomplete lesson ' + l.id);
+    if (l.practice) assert(MODES.some((m) => m.key === l.practice), l.id + ' links to unknown mode ' + l.practice);
+    for (const b of l.blocks) if (b.type === 'hand') assert(validateCopyCounts(hydrate(b.groups.flatMap(groupTiles))).ok, l.id + ' hand');
+  }
+});
+test('every family question agrees with the classifier', () => {
+  for (const s of scenariosForMode('family')) {
+    assertEqual(handSize(s.state.groups), 14, s.id);
+    assertEqual(identifyFamily(s.state.groups), s.answer.correct, s.id);
+    assert(s.answer.choices.includes(s.answer.correct), s.id + ' answer missing from choices');
+  }
+});
+test('every tiles-away answer is offered and matches the engine', () => {
+  for (const s of scenariosForMode('away')) {
+    assertEqual(s.state.rack.length, 13, s.id + ' rack');
+    assertEqual(handSize(s.state.target), 14, s.id + ' target');
+    const r = tilesAway(hydrate(s.state.rack), normalizeGroups(s.state.target), { cardAllowsJoker: s.state.cardAllowsJoker });
+    assert(s.answer.choices.includes(String(r.away)), s.id + ' correct count ' + r.away + ' not offered');
+  }
+});
+test('every best-move question has one valid correct option', () => {
+  for (const s of scenariosForMode('strategy')) {
+    const ids = s.answer.options.map((o) => o.id);
+    assert(ids.includes(s.answer.correct), s.id);
+    assert(s.answer.options.every((o) => o.why), s.id + ' option without reasoning');
+    const all = (s.state.rack || []).concat(s.state.discards || [], ...(s.state.exposures || []).map((e) => e.tiles));
+    assert(validateCopyCounts(hydrate(all)).ok, s.id + ' copy counts');
+  }
+});
+test('the best discard really keeps you closest', () => {
+  for (const s of scenariosForMode('strategy').filter((x) => x.state.discardEval)) {
+    const target = normalizeGroups(s.state.target);
+    const after = s.answer.options.map((o) => {
+      const rack = hydrate(s.state.rack);
+      rack.splice(rack.findIndex((t) => t.typeId === o.tiles[0]), 1);
+      return { id: o.id, away: tilesAway(rack, target).away };
+    });
+    const best = after.find((a) => a.id === s.answer.correct).away;
+    assert(after.every((a) => a.id === s.answer.correct || a.away > best), s.id + ' ' + JSON.stringify(after));
   }
 });
 

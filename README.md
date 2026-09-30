@@ -1,6 +1,7 @@
 # Mah Jongg Practice
 
-A small, calm, accessible practice app for standard American Mah Jongg *mechanics*.
+A calm, accessible app for learning American Mah Jongg: short lessons, a guide to the
+hand families, strategy drills and rules practice, with progress saved on the device.
 It is a teaching tool, not an online game. Plain HTML, CSS and vanilla JavaScript —
 no framework, no build step, no server, no accounts, no network calls.
 
@@ -38,28 +39,50 @@ if a browser seems to be holding an old copy.
 ## File tree
 
 ```
-index.html          page shell, header, live region, disclaimer, confirmation dialog
-styles.css          design tokens, tile faces, large-text and high-contrast themes
+index.html          app shell: top bar, tab bar, live region, confirmation dialog
+styles.css          design tokens, felt table, tile faces, large-text and high-contrast themes
 js/data.js          tile catalog, 152-tile set generation, immutable tile utilities
-js/rules.js         stable validators, table conventions, result codes
-js/scenarios.js     31 original teaching scenarios (no card hands)
-js/app.js           state machine, views, routing, storage facade
+js/rules.js         stable validators, tilesAway(), table conventions, result codes
+js/content.js       lessons, hand families, tips, glossary (original teaching content)
+js/scenarios.js     63 original practice questions across nine modes (no card hands)
+js/tiles.js         realistic tile faces drawn as inline SVG
+js/icons.js         one consistent outline icon set
+js/app.js           routing, views, quiz engine, progress, storage facade
 tests/test.html     developer test page (not linked from the app)
-tests/tests.js      assertions over data.js, rules.js and the scenarios
+tests/tests.js      assertions over the engine, content and scenarios
 .nojekyll           tells GitHub Pages to skip Jekyll processing
 ```
 
-## Practice modes
+## What's in the app
+
+The app has five tabs: **Home**, **Learn**, **Practice**, **Hands** and **Settings**.
+On phones they sit in a bottom tab bar; on wider screens they move into the top bar.
+
+**Learn** — 15 lessons in four sections (Getting Started, The Card, Playing the Game,
+Strategy), plus a searchable glossary. Each lesson links to the practice that goes with it.
+
+**Hands** — a guide to ten hand families (Year, 2468, Like Numbers, Addition, Quints,
+Consecutive Run, 13579, Winds & Dragons, 369, Singles & Pairs), each with an invented
+example hand, how to spot it on your rack, strategy tips and Joker friendliness.
+
+**Practice**
 
 | Mode | What it does |
 |---|---|
-| Learn the Tiles | One large tile at a time, four choices, optional names and hints |
-| Build a Rack | Add and remove tiles freely; blocks impossible quantities; shows the count |
-| Charleston Practice | Choose exactly three tiles to pass; graded on legality only |
-| Call or Pass | Rack, exposures and one discard; decide whether it may be called |
-| Joker Practice | Singles, pairs, pungs, kongs, quints, concealed hands, exchanges |
-| Find the Error | An intentionally invalid table state; identify the problem |
-| My Own Pattern | Type in a 14-tile hand from the card you own; saved in this browser only |
+| Mixed Review | Ten questions from every topic, favoring ones not yet answered correctly |
+| Name the Tile | One large tile, four choices |
+| Tiles & Racks | Set counts and rack sizes |
+| Call or Pass | Rack plus one discard; may it be called? |
+| Joker Rules | Singles, pairs, pungs, kongs, quints, forbidden hands, exchanges |
+| Spot the Mistake | An intentionally invalid table state; identify the problem |
+| Charleston Passes | Choose exactly three tiles to pass; graded on legality only |
+| Name the Family | Identify the family of an invented 14-tile hand |
+| Tiles Away | Count how many tiles a rack needs to finish a hand (Jokers included) |
+| Best Move | Strategy: choosing a hand, Charleston passes, discards, defense, Joker exchanges |
+| Rack Builder | Build or deal a rack and see which families it leans toward |
+| My Own Hands | Enter hands from your own card; deal practice racks and see tiles away |
+
+Answer order is shuffled once per session, and every answer is followed by an explanation.
 
 ## How rules are classified
 
@@ -99,10 +122,12 @@ permits Jokers at all, point values, and suit-colour relationships. The engine n
 guesses these: `cardAllowsJoker` and `handIsConcealed` must be supplied by the caller.
 The only winning patterns the app can check are the ones you type in yourself.
 
-**4. Original educational content — `js/scenarios.js`**
+**4. Original educational content — `js/content.js` and `js/scenarios.js`**
 
-Prompts, hints and explanations. These are written for this project and are never
-consulted by the validators.
+Lessons, family guides, prompts, hints and explanations. These are written for this
+project and are never consulted by the validators. Every example hand is invented and
+labelled as such; tests confirm each one is a legal 14-tile hand that belongs to its
+family, and that every Tiles Away and Best Move answer agrees with the engine.
 
 ## Unresolved accuracy questions
 
@@ -154,7 +179,7 @@ display text.
 ## Testing
 
 Serve the project and open <http://localhost:8000/tests/test.html>. The page runs
-about fifty assertions and prints a pass/fail list. It is not linked from the app.
+66 assertions and prints a pass/fail list. It is not linked from the app.
 
 Covered: set total and family counts, unique instance IDs, deterministic seeded
 shuffling, immutable add and remove, the five-copies rule, rack sizes including
@@ -174,7 +199,7 @@ agrees with the engine, and a `localStorage` that throws on every call.
 4. Home is reachable from every screen.
 5. All seven modes are reachable from Home by keyboard alone.
 6. Tiles are buttons: `Tab` reaches them, `Space` and `Enter` select them.
-7. Selecting a Charleston tile updates the "Chosen: n of 3" count and announces it.
+7. Selecting a Charleston tile updates the "n of 3 chosen" count and announces it.
 8. Answer buttons announce the verdict and explanation through the live region.
 9. "Show a hint" works by keyboard and announces the hint.
 10. Previous, Next and Start-over work by keyboard.
@@ -193,8 +218,8 @@ well as colour, `prefers-reduced-motion` respected, and no timers or audio anywh
 
 ## Privacy
 
-Nothing leaves your device. Settings and patterns are stored in this browser's
-`localStorage` only. If the browser blocks storage, the app still works fully and
+Nothing leaves your device. Settings, progress and saved hands are stored in this
+browser's `localStorage` only. The app loads no fonts, scripts or images from other sites. If the browser blocks storage, the app still works fully and
 says so — it simply forgets your choices when the page closes. Settings has a
 two-step **Delete all my saved information** button.
 
@@ -213,3 +238,6 @@ two-step **Delete all my saved information** button.
 | D9 | Flowers are one type with eight copies | Matches how Flowers are used in American play |
 | D10 | Four open questions documented, not guessed | Accuracy over completeness |
 | D11 | 31 scenarios shipped rather than the 20 planned | Every mode needed real edge cases and negative tests |
+| D12 | System fonts (Iowan Old Style, SF) instead of web fonts | Keeps the no-network privacy promise and looks native on iPhone |
+| D13 | Strategy questions have one clearly best answer, with reasoning for every option | Strategy has judgement in it; explaining each option teaches more than a verdict |
+| D14 | Tile faces drawn as SVG in code | Crisp at every size, no image files, accessible names come from data.js |

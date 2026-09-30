@@ -2,6 +2,8 @@
 // No annual card hands are reproduced here. Validation logic lives in rules.js.
 // Every scenario is deep-frozen so a mode cannot mutate a fixture.
 
+import { yearExampleGroups, CURRENT_YEAR } from './content.js';
+
 function deepFreeze(obj) {
   if (obj && typeof obj === 'object' && !Object.isFrozen(obj)) {
     Object.freeze(obj);
@@ -29,8 +31,8 @@ const SCENARIOS = [
     state: { tile: 'dragon-white' },
     prompt: 'Which tile is this?',
     answer: { kind: 'identify', correct: ['dragon-white'], choices: ['dragon-white', 'dragon-green', 'flower', 'wind-west'], judgeStrategy: false },
-    explanation: 'This is the White Dragon, often called Soap. In many hands it also stands in as a zero.',
-    hint: 'It is one of the three Dragons, and it is the plain one.'
+    explanation: 'This is the White Dragon, often called Soap. It looks like an empty blue frame, and on the card it also stands in as a zero.',
+    hint: 'It is one of the three Dragons, and it has no character in the middle.'
   },
   {
     id: 'TILE-003', mode: 'tiles', difficulty: 1,
@@ -59,8 +61,68 @@ const SCENARIOS = [
     state: { tile: 'craks-9' },
     prompt: 'Which tile is this?',
     answer: { kind: 'identify', correct: ['craks-9'], choices: ['craks-9', 'craks-6', 'bams-9', 'dots-9'], judgeStrategy: false },
-    explanation: 'This is the 9 of Craks. Craks are the character suit, and they also run from 1 to 9.',
-    hint: 'Check both the number and the suit name.'
+    explanation: 'This is the 9 of Craks. Craks are the character suit: the Chinese number sits on top, the red character below, and the number is in the corner.',
+    hint: 'Look at the corner number, then at the red character underneath.'
+  },
+  {
+    id: 'TILE-006', mode: 'tiles', difficulty: 2,
+    objective: 'Recognize the 1 Bam, which is drawn as a bird.',
+    ruleTags: ['tile-identity'],
+    state: { tile: 'bams-1' },
+    prompt: 'Which tile is this?',
+    answer: { kind: 'identify', correct: ['bams-1'], choices: ['bams-1', 'flower', 'dots-1', 'craks-1'], judgeStrategy: false },
+    explanation: 'This is the 1 Bam. Instead of a single bamboo stick, most sets draw it as a bird. The corner number tells you it is a 1.',
+    hint: 'It is a suit tile, even though it does not look like the other Bams.'
+  },
+  {
+    id: 'TILE-007', mode: 'tiles', difficulty: 1,
+    objective: 'Recognize the Green Dragon.',
+    ruleTags: ['tile-identity', 'dragons'],
+    state: { tile: 'dragon-green' },
+    prompt: 'Which tile is this?',
+    answer: { kind: 'identify', correct: ['dragon-green'], choices: ['dragon-green', 'dragon-red', 'dragon-white', 'bams-9'], judgeStrategy: false },
+    explanation: 'This is the Green Dragon. It is the partner of the Bams suit, so on the card a green “D” next to Bams means this tile.',
+    hint: 'Its color is the giveaway.'
+  },
+  {
+    id: 'TILE-008', mode: 'tiles', difficulty: 1,
+    objective: 'Recognize a Flower.',
+    ruleTags: ['tile-identity'],
+    state: { tile: 'flower' },
+    prompt: 'Which tile is this?',
+    answer: { kind: 'identify', correct: ['flower'], choices: ['flower', 'joker', 'dragon-red', 'bams-1'], judgeStrategy: false },
+    explanation: 'This is a Flower. A set has eight of them, and they are all interchangeable — any Flower counts as “F” on the card.',
+    hint: 'There are eight of these in a set, and they are all treated the same.'
+  },
+  {
+    id: 'TILE-009', mode: 'tiles', difficulty: 2,
+    objective: 'Recognize a Wind by its character.',
+    ruleTags: ['tile-identity', 'winds'],
+    state: { tile: 'wind-north' },
+    prompt: 'Which tile is this?',
+    answer: { kind: 'identify', correct: ['wind-north'], choices: ['wind-north', 'wind-south', 'wind-east', 'wind-west'], judgeStrategy: false },
+    explanation: 'This is the North Wind. American sets print the letter in the corner, so you never need to read the character.',
+    hint: 'Check the letter in the corner.'
+  },
+  {
+    id: 'TILE-010', mode: 'tiles', difficulty: 2,
+    objective: 'Count a high Dot tile.',
+    ruleTags: ['tile-identity'],
+    state: { tile: 'dots-8' },
+    prompt: 'Which tile is this?',
+    answer: { kind: 'identify', correct: ['dots-8'], choices: ['dots-8', 'dots-6', 'dots-9', 'bams-8'], judgeStrategy: false },
+    explanation: 'This is the 8 of Dots: two columns of four circles.',
+    hint: 'Count one column and double it.'
+  },
+  {
+    id: 'TILE-011', mode: 'tiles', difficulty: 3,
+    objective: 'Read a Crak tile.',
+    ruleTags: ['tile-identity'],
+    state: { tile: 'craks-3' },
+    prompt: 'Which tile is this?',
+    answer: { kind: 'identify', correct: ['craks-3'], choices: ['craks-3', 'craks-2', 'bams-3', 'dots-3'], judgeStrategy: false },
+    explanation: 'This is the 3 Crak. The Chinese number three is three short lines, which is easy to remember.',
+    hint: 'Count the lines at the top, or read the corner.'
   },
 
   /* ---------------- Build a Rack ---------------- */
@@ -331,6 +393,396 @@ const SCENARIOS = [
     answer: { kind: 'identify', correct: ['JOKER_DISCARD_DEAD'], choices: ['JOKER_DISCARD_DEAD', 'GROUP_MIXED_TYPES', 'RACK_TOO_MANY', 'PATTERN_NOT_MATCHED'], judgeStrategy: false },
     explanation: 'Once a Joker is discarded it is dead. No player may claim it, even when it would complete a legal group.',
     hint: 'Where did that Joker come from?'
+  },
+
+  /* ---------------- Name the Family ----------------
+     Every hand below is invented for teaching. None is copied from any card.
+     Tests confirm identifyFamily() agrees with each answer. */
+  {
+    id: 'FAM-001', mode: 'family', difficulty: 1,
+    objective: 'Recognize an all-even hand.',
+    ruleTags: ['families'],
+    state: { groups: [['flower', 2], ['bams-2', 3], ['bams-4', 3], ['craks-6', 4], ['craks-8', 2]] },
+    prompt: 'Which family does this hand belong to?',
+    answer: { kind: 'choice', correct: '2468', choices: ['2468', '13579', '369', 'consecutive'] },
+    explanation: 'Every number here is even — 2, 4, 6 and 8 — so this is a 2468 hand.',
+    hint: 'Are the numbers odd or even?'
+  },
+  {
+    id: 'FAM-002', mode: 'family', difficulty: 1,
+    objective: 'Recognize an all-odd hand.',
+    ruleTags: ['families'],
+    state: { groups: [['dots-1', 3], ['dots-3', 3], ['bams-5', 4], ['bams-7', 2], ['craks-9', 2]] },
+    prompt: 'Which family does this hand belong to?',
+    answer: { kind: 'choice', correct: '13579', choices: ['13579', '2468', 'like', 'winds-dragons'] },
+    explanation: 'Every number is odd — 1, 3, 5, 7 and 9 — which makes this a 13579 hand.',
+    hint: 'Look at whether the numbers are odd or even.'
+  },
+  {
+    id: 'FAM-003', mode: 'family', difficulty: 1,
+    objective: 'Recognize a like-numbers hand.',
+    ruleTags: ['families'],
+    state: { groups: [['flower', 2], ['dots-7', 4], ['bams-7', 4], ['craks-7', 4]] },
+    prompt: 'Which family does this hand belong to?',
+    answer: { kind: 'choice', correct: 'like', choices: ['like', 'consecutive', 'addition', '13579'] },
+    explanation: 'Only one number appears — 7 — in all three suits. That is the Like Numbers family. It is odd, too, but a single repeated number is the stronger clue.',
+    hint: 'How many different numbers do you see?'
+  },
+  {
+    id: 'FAM-004', mode: 'family', difficulty: 1,
+    objective: 'Recognize an honors hand.',
+    ruleTags: ['families'],
+    state: { groups: [['wind-north', 4], ['dragon-red', 3], ['dragon-green', 3], ['wind-south', 4]] },
+    prompt: 'Which family does this hand belong to?',
+    answer: { kind: 'choice', correct: 'winds-dragons', choices: ['winds-dragons', 'singles-pairs', 'quints', 'year'] },
+    explanation: 'There are no number tiles at all — only Winds and Dragons. That is the Winds & Dragons family.',
+    hint: 'Are there any number tiles?'
+  },
+  {
+    id: 'FAM-005', mode: 'family', difficulty: 2,
+    objective: 'Recognize a 369 hand.',
+    ruleTags: ['families'],
+    state: { groups: [['flower', 2], ['dots-3', 4], ['dots-6', 4], ['craks-9', 4]] },
+    prompt: 'Which family does this hand belong to?',
+    answer: { kind: 'choice', correct: '369', choices: ['369', 'addition', '13579', '2468'] },
+    explanation: 'The numbers are 3, 6 and 9 only, so this is a 369 hand. (3 + 6 does make 9, but 369 is its own family on the card.)',
+    hint: 'Which three numbers appear?'
+  },
+  {
+    id: 'FAM-006', mode: 'family', difficulty: 2,
+    objective: 'Recognize a consecutive run.',
+    ruleTags: ['families'],
+    state: { groups: [['bams-4', 2], ['bams-5', 3], ['bams-6', 4], ['bams-7', 3], ['dragon-green', 2]] },
+    prompt: 'Which family does this hand belong to?',
+    answer: { kind: 'choice', correct: 'consecutive', choices: ['consecutive', '2468', 'like', 'addition'] },
+    explanation: 'The numbers run 4, 5, 6, 7 in a row. Numbers in sequence make a Consecutive Run. The Green Dragon matches the Bams suit.',
+    hint: 'Put the numbers in order. Do they follow each other?'
+  },
+  {
+    id: 'FAM-007', mode: 'family', difficulty: 2,
+    objective: 'Recognize a quint hand.',
+    ruleTags: ['families', 'joker'],
+    state: { groups: [['dots-2', 5, 1], ['dots-3', 5, 2], ['flower', 4]] },
+    prompt: 'Which family does this hand belong to?',
+    answer: { kind: 'choice', correct: 'quints', choices: ['quints', 'like', 'consecutive', 'singles-pairs'] },
+    explanation: 'Two groups of five identical tiles — quints. Only four real copies of a tile exist, so each quint uses Jokers.',
+    hint: 'Count the tiles in each group.'
+  },
+  {
+    id: 'FAM-008', mode: 'family', difficulty: 2,
+    objective: 'Recognize a singles-and-pairs hand.',
+    ruleTags: ['families', 'joker'],
+    state: { groups: [['wind-north', 2], ['wind-east', 2], ['wind-west', 2], ['wind-south', 2], ['dots-1', 2], ['bams-1', 2], ['craks-1', 2]] },
+    prompt: 'Which family does this hand belong to?',
+    answer: { kind: 'choice', correct: 'singles-pairs', choices: ['singles-pairs', 'winds-dragons', 'like', '13579'] },
+    explanation: 'Every group is a pair. A hand made only of singles and pairs belongs to Singles & Pairs — and it can never use Jokers.',
+    hint: 'Look at the size of every group, not the tiles.'
+  },
+  {
+    id: 'FAM-009', mode: 'family', difficulty: 3,
+    objective: 'Recognize an addition hand.',
+    ruleTags: ['families'],
+    state: { groups: [['flower', 2], ['bams-2', 3], ['bams-5', 3], ['bams-7', 4], ['dragon-green', 2]] },
+    prompt: 'Which family does this hand belong to?',
+    answer: { kind: 'choice', correct: 'addition', choices: ['addition', 'consecutive', '13579', 'like'] },
+    explanation: '2 + 5 = 7. Three numbers where the first two add up to the third make an Addition hand.',
+    hint: 'Try adding the two smaller numbers.'
+  },
+  {
+    id: 'FAM-010', mode: 'family', difficulty: 3,
+    objective: 'Recognize a year hand.',
+    ruleTags: ['families'],
+    state: { groups: yearExampleGroups() },
+    prompt: 'Which family does this hand belong to?',
+    answer: { kind: 'choice', correct: 'year', choices: ['year', 'like', 'winds-dragons', 'quints'] },
+    explanation: `The numbers spell out ${CURRENT_YEAR}, with Soap (the White Dragon) standing in for the zero. That is a Year hand.`,
+    hint: 'Read the numbers left to right. Soap can mean zero.'
+  },
+
+  /* ---------------- Tiles Away ----------------
+     Tests confirm tilesAway() in rules.js agrees with every answer. */
+  {
+    id: 'AWAY-001', mode: 'away', difficulty: 1,
+    objective: 'Count missing tiles with no Jokers.',
+    ruleTags: ['strategy', 'tiles-away'],
+    state: {
+      target: [['flower', 2], ['dots-2', 3], ['dots-4', 3], ['bams-6', 4], ['bams-8', 2]],
+      rack: ['flower', 'flower', 'dots-2', 'dots-2', 'dots-2', 'dots-4', 'dots-4', 'bams-6', 'bams-6', 'bams-6', 'bams-8', 'craks-9', 'wind-north'],
+      cardAllowsJoker: true
+    },
+    prompt: 'How many tiles away from this hand are you?',
+    answer: { kind: 'choice', choices: ['1', '2', '3', '4', '5'] },
+    explanation: 'Match your rack against the hand one group at a time. The 9 Crak and North Wind don’t fit at all, so they will be your next discards.',
+    hint: 'Go group by group: Flowers, 2s, 4s, 6s, 8s.'
+  },
+  {
+    id: 'AWAY-002', mode: 'away', difficulty: 2,
+    objective: 'Let Jokers fill pungs and kongs.',
+    ruleTags: ['strategy', 'tiles-away', 'joker'],
+    state: {
+      target: [['flower', 2], ['dots-2', 3], ['dots-4', 3], ['bams-6', 4], ['bams-8', 2]],
+      rack: ['flower', 'flower', 'dots-2', 'dots-2', 'joker', 'dots-4', 'dots-4', 'dots-4', 'bams-6', 'bams-6', 'joker', 'bams-8', 'bams-8'],
+      cardAllowsJoker: true
+    },
+    prompt: 'You hold two Jokers. How many tiles away from this hand are you?',
+    answer: { kind: 'choice', choices: ['1', '2', '3', '4', '5'] },
+    explanation: 'Your two Jokers can each fill a spot in a pung or kong, which closes most of the gap.',
+    hint: 'Jokers can fill the 2s pung and the 6s kong.'
+  },
+  {
+    id: 'AWAY-003', mode: 'away', difficulty: 2,
+    objective: 'Remember that Jokers cannot fill a pair.',
+    ruleTags: ['strategy', 'tiles-away', 'joker'],
+    state: {
+      target: [['flower', 2], ['dots-5', 4], ['bams-5', 4], ['craks-5', 4]],
+      rack: ['joker', 'joker', 'joker', 'dots-5', 'dots-5', 'dots-5', 'bams-5', 'bams-5', 'bams-5', 'craks-5', 'craks-5', 'craks-5', 'wind-north'],
+      cardAllowsJoker: true
+    },
+    prompt: 'Three Jokers and nine 5s! How many tiles away are you?',
+    answer: { kind: 'choice', choices: ['0', '1', '2', '3', '4'] },
+    explanation: 'The Jokers complete all three kongs, but the hand also needs a pair of Flowers — and a Joker can never be used in a pair.',
+    hint: 'Which group can a Joker never help with?'
+  },
+  {
+    id: 'AWAY-004', mode: 'away', difficulty: 3,
+    objective: 'Count a hand that allows no Jokers.',
+    ruleTags: ['strategy', 'tiles-away', 'joker'],
+    state: {
+      target: [['wind-north', 2], ['wind-east', 2], ['wind-west', 2], ['wind-south', 2], ['dots-1', 2], ['bams-1', 2], ['craks-1', 2]],
+      rack: ['wind-north', 'wind-north', 'wind-east', 'wind-west', 'wind-west', 'wind-south', 'wind-south', 'dots-1', 'dots-1', 'bams-1', 'joker', 'joker', 'craks-3'],
+      cardAllowsJoker: false
+    },
+    prompt: 'This Singles & Pairs hand allows no Jokers. How many tiles away are you?',
+    answer: { kind: 'choice', choices: ['2', '3', '4', '5', '6'] },
+    explanation: 'In a hand made of pairs, your Jokers are no help at all. Count only real tiles.',
+    hint: 'Ignore the Jokers completely.'
+  },
+  {
+    id: 'AWAY-005', mode: 'away', difficulty: 3,
+    objective: 'Count a quint hand.',
+    ruleTags: ['strategy', 'tiles-away', 'joker'],
+    state: {
+      target: [['dots-2', 5], ['dots-3', 5], ['flower', 4]],
+      rack: ['dots-2', 'dots-2', 'dots-2', 'joker', 'dots-3', 'dots-3', 'dots-3', 'dots-3', 'flower', 'flower', 'flower', 'joker', 'bams-9'],
+      cardAllowsJoker: true
+    },
+    prompt: 'How many tiles away from this quint hand are you?',
+    answer: { kind: 'choice', choices: ['1', '2', '3', '4', '5'] },
+    explanation: 'Every group here is three or more tiles, so each Joker can fill any gap. Count the gaps, then subtract your Jokers.',
+    hint: 'Count what’s missing from each group, then use your Jokers.'
+  },
+  {
+    id: 'AWAY-006', mode: 'away', difficulty: 3,
+    objective: 'Combine pairs, pungs and a Joker.',
+    ruleTags: ['strategy', 'tiles-away', 'joker'],
+    state: {
+      target: [['bams-4', 2], ['bams-5', 3], ['bams-6', 4], ['bams-7', 3], ['dragon-green', 2]],
+      rack: ['bams-4', 'bams-5', 'bams-5', 'bams-6', 'bams-6', 'bams-6', 'bams-7', 'bams-7', 'bams-7', 'dragon-green', 'joker', 'craks-9', 'dots-1'],
+      cardAllowsJoker: true
+    },
+    prompt: 'How many tiles away from this run are you?',
+    answer: { kind: 'choice', choices: ['1', '2', '3', '4', '5'] },
+    explanation: 'Your Joker can help the 5s or the 6s, but not the pair of 4s or the pair of Green Dragons.',
+    hint: 'Two of the missing tiles belong to pairs.'
+  },
+
+  /* ---------------- Best Move (strategy) ----------------
+     Strategy has judgement in it. Each question has one clearly best answer,
+     and every option explains its reasoning. */
+  {
+    id: 'STRAT-001', mode: 'strategy', difficulty: 1,
+    objective: 'Choose a direction right after the deal.',
+    ruleTags: ['strategy', 'choosing'],
+    state: {
+      situation: 'You have just been dealt this rack. The Charleston hasn’t started yet.',
+      rack: ['dots-2', 'dots-2', 'dots-4', 'bams-4', 'bams-4', 'bams-6', 'craks-6', 'craks-8', 'craks-8', 'flower', 'flower', 'joker', 'wind-north']
+    },
+    prompt: 'Which family should you lean toward?',
+    answer: { kind: 'choice', correct: 'a', options: [
+      { id: 'a', label: '2468 — even numbers', why: 'Nine of your number tiles are even, you have three even pairs, plus two Flowers and a Joker. This rack is practically asking for 2468.' },
+      { id: 'b', label: '13579 — odd numbers', why: 'You don’t hold a single odd number. You’d be starting from scratch.' },
+      { id: 'c', label: 'Winds & Dragons', why: 'One North Wind isn’t much of a start, and you’d be throwing away all your good pairs.' },
+      { id: 'd', label: 'Singles & Pairs', why: 'You do have pairs, but Singles & Pairs can’t use your Joker, and your even-number pungs are a better fit.' }
+    ] },
+    explanation: 'Look for the strongest pattern first. Here the numbers are all even, so 2468 is the natural choice — keep one or two backup hands in mind.',
+    hint: 'Are your numbers mostly odd or even?'
+  },
+  {
+    id: 'STRAT-002', mode: 'strategy', difficulty: 2,
+    objective: 'Spot a Singles & Pairs rack.',
+    ruleTags: ['strategy', 'choosing'],
+    state: {
+      situation: 'You have just been dealt this rack. You have no Jokers.',
+      rack: ['wind-north', 'wind-north', 'dots-2', 'dots-2', 'bams-5', 'bams-5', 'craks-7', 'craks-7', 'dots-9', 'dots-9', 'wind-east', 'bams-1', 'flower']
+    },
+    prompt: 'Which direction is most promising?',
+    answer: { kind: 'choice', correct: 'a', options: [
+      { id: 'a', label: 'Singles & Pairs', why: 'Five pairs already, no Jokers to waste, and numbers with no common pattern. This is the classic Singles & Pairs rack.' },
+      { id: 'b', label: 'Quints', why: 'Quints need Jokers — at least one for every quint — and you have none.' },
+      { id: 'c', label: 'Like Numbers', why: 'Your pairs are all different numbers, so no single number stands out.' },
+      { id: 'd', label: '369', why: 'Only your 9s fit. The rest would need replacing.' }
+    ] },
+    explanation: 'Five or more pairs with no Jokers is the signal for Singles & Pairs. It is harder to finish, but it is usually worth more.',
+    hint: 'Count your pairs and your Jokers.'
+  },
+  {
+    id: 'STRAT-003', mode: 'strategy', difficulty: 2,
+    objective: 'Put a pile of Jokers to work.',
+    ruleTags: ['strategy', 'choosing', 'joker'],
+    state: {
+      situation: 'You were dealt three Jokers — lucky you.',
+      rack: ['joker', 'joker', 'joker', 'dots-7', 'dots-7', 'bams-7', 'bams-7', 'craks-7', 'flower', 'flower', 'bams-2', 'craks-9', 'wind-north']
+    },
+    prompt: 'Which kind of hand makes the best use of this rack?',
+    answer: { kind: 'choice', correct: 'a', options: [
+      { id: 'a', label: 'Like Numbers — 7s in every suit', why: 'Five 7s across three suits and three Jokers to fill kongs. Big groups are exactly where Jokers shine.' },
+      { id: 'b', label: 'Singles & Pairs', why: 'This would waste all three Jokers. Singles & Pairs never uses them.' },
+      { id: 'c', label: 'Winds & Dragons', why: 'One North Wind is a weak start, and you’d be passing away your 7s.' },
+      { id: 'd', label: '2468', why: 'Your 7s are odd. You hold only one even tile.' }
+    ] },
+    explanation: 'Jokers are most powerful in hands with kongs and quints. With three Jokers, pick a hand full of big groups.',
+    hint: 'Where do Jokers do the most good?'
+  },
+  {
+    id: 'STRAT-004', mode: 'strategy', difficulty: 1,
+    objective: 'Pass loners in the Charleston.',
+    ruleTags: ['strategy', 'charleston'],
+    state: {
+      situation: 'First Charleston, first pass, to your right. You’re thinking about a Consecutive Run in Dots.',
+      rack: ['bams-1', 'craks-9', 'wind-north', 'wind-west', 'dots-3', 'dots-3', 'dots-4', 'dots-5', 'flower', 'flower', 'bams-6', 'bams-6', 'joker']
+    },
+    prompt: 'Which three tiles should you pass?',
+    answer: { kind: 'choice', correct: 'c', options: [
+      { id: 'a', label: 'Joker, 1 Bam and 9 Crak', tiles: ['joker', 'bams-1', 'craks-9'], why: 'Not allowed. A Joker may never be passed in the Charleston.' },
+      { id: 'b', label: 'Both Flowers and a 3 Dot', tiles: ['flower', 'flower', 'dots-3'], why: 'This breaks up two pairs. Pairs are precious, because a Joker can never fill them.' },
+      { id: 'c', label: '1 Bam, 9 Crak and West Wind', tiles: ['bams-1', 'craks-9', 'wind-west'], why: 'These are loners — they connect to nothing on your rack. Passing the North instead of one of them would be just as good.' },
+      { id: 'd', label: 'Both 6 Bams and the 4 Dot', tiles: ['bams-6', 'bams-6', 'dots-4'], why: 'This breaks a pair and a tile from the middle of your run.' }
+    ] },
+    explanation: 'Early passes should be loners — tiles that fit none of your plans. Keep your pairs and the heart of your hand.',
+    hint: 'Which tiles don’t connect to anything?'
+  },
+  {
+    id: 'STRAT-005', mode: 'strategy', difficulty: 2,
+    objective: 'Discard the tile that keeps you closest.',
+    ruleTags: ['strategy', 'discarding', 'tiles-away'],
+    state: {
+      situation: 'You just drew a tile and now hold 14. You’re playing this hand:',
+      target: [['flower', 2], ['dots-2', 3], ['dots-4', 3], ['bams-6', 4], ['bams-8', 2]],
+      rack: ['flower', 'flower', 'dots-2', 'dots-2', 'dots-2', 'dots-4', 'dots-4', 'bams-6', 'bams-6', 'bams-6', 'bams-8', 'bams-8', 'craks-7', 'joker'],
+      discardEval: true,
+      cardAllowsJoker: true
+    },
+    prompt: 'Which tile should you discard?',
+    answer: { kind: 'choice', correct: 'a', options: [
+      { id: 'a', label: '7 Crak', tiles: ['craks-7'], why: 'It isn’t part of your hand at all. Throwing it leaves you just one tile away.' },
+      { id: 'b', label: '8 Bam', tiles: ['bams-8'], why: 'That breaks your finished pair of 8s — and a Joker can’t replace half a pair.' },
+      { id: 'c', label: '4 Dot', tiles: ['dots-4'], why: 'You need three 4 Dots. Throwing one moves you further away.' },
+      { id: 'd', label: 'Joker', tiles: ['joker'], why: 'Your Joker is filling a spot in your hand. Never throw a working Joker.' }
+    ] },
+    explanation: 'When you’re unsure, count tiles away for each choice. The best discard is the one that keeps that number lowest.',
+    hint: 'Which tile isn’t in your hand at all?'
+  },
+  {
+    id: 'STRAT-006', mode: 'strategy', difficulty: 3,
+    objective: 'Pick a safe discard.',
+    ruleTags: ['strategy', 'defense'],
+    state: {
+      situation: 'Late in the game. The player on your left has three exposures. Three 3 Bams have already been discarded.',
+      exposures: [
+        { label: 'Player on your left', tiles: ['dots-2', 'dots-2', 'dots-2'] },
+        { label: '', tiles: ['dots-4', 'dots-4', 'joker'] },
+        { label: '', tiles: ['dots-6', 'dots-6', 'dots-6'] }
+      ],
+      discards: ['bams-3', 'bams-3', 'bams-3', 'wind-east', 'craks-1'],
+      rack: ['dots-8', 'bams-3', 'wind-west', 'dots-6', 'craks-2', 'craks-2', 'craks-5', 'craks-5', 'craks-5', 'bams-7', 'bams-7', 'flower', 'flower', 'joker']
+    },
+    prompt: 'You must discard. Which tile is safest?',
+    answer: { kind: 'choice', correct: 'b', options: [
+      { id: 'a', label: '8 Dot', tiles: ['dots-8'], why: 'Dangerous. Their exposures are all even Dots, so an 8 Dot could be exactly what they need.' },
+      { id: 'b', label: '3 Bam', tiles: ['bams-3'], why: 'Completely safe. Three 3 Bams are already discarded and you hold the fourth, so nobody can use it for anything.' },
+      { id: 'c', label: 'West Wind', tiles: ['wind-west'], why: 'Probably safe, but not certain. Someone could still be holding a pair of Wests.' },
+      { id: 'd', label: '6 Dot', tiles: ['dots-6'], why: 'Risky. They are clearly collecting even Dots and might want a kong of 6s.' }
+    ] },
+    explanation: 'A tile whose other copies are all visible — a dead tile — is the safest discard in the game. Read exposures, then look at the discards.',
+    hint: 'How many 3 Bams are left in the game?'
+  },
+  {
+    id: 'STRAT-007', mode: 'strategy', difficulty: 2,
+    objective: 'Don’t expose too early.',
+    ruleTags: ['strategy', 'calling'],
+    state: {
+      situation: 'Third turn of the game. Someone discards a North Wind. You hold two Norths, but most of your rack is even numbers.',
+      discard: 'wind-north',
+      rack: ['wind-north', 'wind-north', 'wind-east', 'dots-2', 'dots-2', 'dots-4', 'bams-4', 'bams-6', 'bams-6', 'craks-8', 'craks-8', 'flower', 'joker']
+    },
+    prompt: 'What should you do?',
+    answer: { kind: 'choice', correct: 'b', options: [
+      { id: 'a', label: 'Call it and expose three Norths', why: 'Legal, but it commits you to a Winds hand when your rack clearly leans 2468 — and it tells everyone your plan.' },
+      { id: 'b', label: 'Let it go and stay with 2468', why: 'Your rack is mostly even pairs. Calling a Wind now would pull you toward your weaker option.' },
+      { id: 'c', label: 'Call it and add your Joker to make a kong', why: 'That exposes even more, and spends your Joker on a hand you probably won’t play.' }
+    ] },
+    explanation: 'Calling is a commitment, and exposures tell other players what you’re collecting. Early in the game, call only for the hand you actually intend to play.',
+    hint: 'Which hand does most of your rack support?'
+  },
+  {
+    id: 'STRAT-008', mode: 'strategy', difficulty: 2,
+    objective: 'Take a free Joker.',
+    ruleTags: ['strategy', 'joker-exchange'],
+    state: {
+      situation: 'It’s your turn and you’ve drawn a tile. The player across has this exposure. Your hand has no use for the 5 Bam you’re holding.',
+      exposures: [{ label: 'Player across', tiles: ['bams-5', 'bams-5', 'joker'] }],
+      rack: ['bams-5', 'dots-2', 'dots-2', 'dots-4', 'dots-4', 'dots-4', 'bams-6', 'bams-6', 'bams-8', 'bams-8', 'flower', 'flower', 'craks-1', 'wind-north']
+    },
+    prompt: 'What’s your best move?',
+    answer: { kind: 'choice', correct: 'a', options: [
+      { id: 'a', label: 'Swap your 5 Bam for their Joker', why: 'Free Joker! You turn a useless tile into the most valuable tile in the game, and you never have to discard the 5 Bam.' },
+      { id: 'b', label: 'Discard the 5 Bam', why: 'You’d throw away a tile that could have become a Joker — and a 5 Bam might help someone.' },
+      { id: 'c', label: 'Keep the 5 Bam just in case', why: 'It doesn’t fit your hand. Holding it gains nothing when it could be a Joker.' }
+    ] },
+    explanation: 'Check every exposure for Jokers on every turn. Exchanging a tile you don’t need for a Joker is one of the best moves in the game.',
+    hint: 'Look at what the Joker in that exposure is standing in for.'
+  },
+  {
+    id: 'STRAT-009', mode: 'strategy', difficulty: 3,
+    objective: 'Stop the second Charleston when you’re close.',
+    ruleTags: ['strategy', 'charleston'],
+    state: {
+      situation: 'The first Charleston is done. You’re playing the hand below and are only two tiles away, with two Jokers.',
+      target: [['flower', 2], ['dots-2', 3], ['dots-4', 3], ['bams-6', 4], ['bams-8', 2]],
+      rack: ['flower', 'flower', 'dots-2', 'dots-2', 'dots-4', 'dots-4', 'bams-6', 'bams-6', 'bams-8', 'bams-8', 'joker', 'joker', 'craks-1'],
+      cardAllowsJoker: true
+    },
+    prompt: 'Someone asks, “Shall we do the second Charleston?”',
+    answer: { kind: 'choice', correct: 'a', options: [
+      { id: 'a', label: 'Say no — stop the second Charleston', why: 'Any player may stop it. Your hand is nearly ready, and three more passes would force you to give away useful tiles.' },
+      { id: 'b', label: 'Agree and keep passing', why: 'You’d have to pass three tiles three more times. With only one loner, you’d be breaking up your own hand.' },
+      { id: 'c', label: 'Pass your Jokers to keep things fair', why: 'Never allowed — and never a good idea.' }
+    ] },
+    explanation: 'The second Charleston is optional, and a single “no” stops it. When your rack is already close, protect it.',
+    hint: 'How many tiles could you spare for three more passes?'
+  },
+  {
+    id: 'STRAT-010', mode: 'strategy', difficulty: 3,
+    objective: 'Play defense late in the game.',
+    ruleTags: ['strategy', 'defense'],
+    state: {
+      situation: 'Only a few tiles are left in the wall. You’re four tiles away. The player across has three exposures. You just drew a 7 Dot. Two North Winds have been discarded.',
+      exposures: [
+        { label: 'Player across', tiles: ['bams-7', 'bams-7', 'bams-7'] },
+        { label: '', tiles: ['craks-7', 'craks-7', 'craks-7', 'joker'] },
+        { label: '', tiles: ['flower', 'flower', 'flower'] }
+      ],
+      discards: ['wind-north', 'wind-north', 'dots-1', 'bams-2'],
+      rack: ['dots-7', 'wind-north', 'dots-2', 'dots-3', 'dots-3', 'bams-4', 'bams-5', 'craks-8', 'craks-8', 'dragon-red', 'wind-east', 'wind-east', 'bams-9', 'joker']
+    },
+    prompt: 'What should you discard?',
+    answer: { kind: 'choice', correct: 'b', options: [
+      { id: 'a', label: 'The 7 Dot you just drew', tiles: ['dots-7'], why: 'Very dangerous. They are showing 7s in two suits — a 7 Dot could hand them Mahjong, and the discarder pays double.' },
+      { id: 'b', label: 'Your North Wind', tiles: ['wind-north'], why: 'Safe. Two Norths are already out and nobody called them. You’re four away, so defense matters more than your hand now.' },
+      { id: 'c', label: 'Your Joker', tiles: ['joker'], why: 'Also safe, but wasteful. You have a safe tile you don’t need, so keep the Joker.' }
+    ] },
+    explanation: 'When someone else is close and you’re not, switch to defense: hold the tiles they want and throw tiles that are already out.',
+    hint: 'What are their exposures telling you?'
   }
 ];
 
@@ -344,12 +796,22 @@ export function getScenario(id) {
   return ALL_SCENARIOS.find((s) => s.id === id) || null;
 }
 
+// Quiz modes, grouped for the Practice screen. `icon` names come from icons.js.
 export const MODES = Object.freeze([
-  { key: 'tiles', title: 'Learn the Tiles', blurb: 'See one tile at a time and name it.' },
-  { key: 'rack', title: 'Build a Rack', blurb: 'Add and remove tiles and watch the count.' },
-  { key: 'charleston', title: 'Charleston Practice', blurb: 'Choose exactly three tiles to pass.' },
-  { key: 'call', title: 'Call or Pass', blurb: 'Decide whether a discard may be called.' },
-  { key: 'joker', title: 'Joker Practice', blurb: 'Where a Joker may and may not go.' },
-  { key: 'error', title: 'Find the Error', blurb: 'Spot what is wrong at the table.' },
-  { key: 'pattern', title: 'My Own Pattern', blurb: 'Type in a hand from your own card and practise it.' }
+  { key: 'tiles', group: 'rules', icon: 'tile', title: 'Name the Tile', blurb: 'Recognize every tile at a glance.' },
+  { key: 'rack', group: 'rules', icon: 'rows', title: 'Tiles & Racks', blurb: 'How many tiles exist, and how many you hold.' },
+  { key: 'call', group: 'rules', icon: 'hand', title: 'Call or Pass', blurb: 'May you claim that discard?' },
+  { key: 'joker', group: 'rules', icon: 'sparkle', title: 'Joker Rules', blurb: 'Where a Joker may and may not go.' },
+  { key: 'error', group: 'rules', icon: 'search', title: 'Spot the Mistake', blurb: 'Find what’s wrong at the table.' },
+  { key: 'charleston', group: 'strategy', icon: 'repeat', title: 'Charleston Passes', blurb: 'Choose three tiles to pass.' },
+  { key: 'family', group: 'strategy', icon: 'layers', title: 'Name the Family', blurb: 'Which section of the card is this hand?' },
+  { key: 'away', group: 'strategy', icon: 'flag', title: 'Tiles Away', blurb: 'How close is this rack to the hand?' },
+  { key: 'strategy', group: 'strategy', icon: 'compass', title: 'Best Move', blurb: 'Choose the smartest play at the table.' }
 ]);
+
+// Modes whose questions can be mixed into a review session.
+export const REVIEW_MODES = Object.freeze(['tiles', 'rack', 'call', 'joker', 'error', 'family', 'away', 'strategy']);
+
+export function getMode(key) {
+  return MODES.find((m) => m.key === key) || null;
+}
