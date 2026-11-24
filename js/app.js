@@ -163,23 +163,31 @@ function sectionHead(title, link) {
   ]);
 }
 
+// daisyUI buttons. Class names are written out in full so the CSS build can find them.
+const BUTTON_CLASSES = {
+  primary: 'btn btn-primary',
+  secondary: 'btn btn-outline',
+  ghost: 'btn btn-ghost text-primary',
+  light: 'btn btn-light',
+  danger: 'btn btn-error',
+  'danger-ghost': 'btn btn-outline btn-error'
+};
+
 function btn(label, opts = {}) {
-  const cls = 'btn ' + (opts.variant ? 'btn-' + opts.variant : 'btn-secondary') + (opts.block ? ' btn-block' : '');
+  const cls = (BUTTON_CLASSES[opts.variant] || BUTTON_CLASSES.secondary) + (opts.block ? ' btn-block' : '');
   const kids = [opts.icon && !opts.iconAfter ? ic(opts.icon) : null, el('span', { text: label }), opts.icon && opts.iconAfter ? ic(opts.icon) : null];
   if (opts.href) return el('a', { class: cls, href: opts.href, 'data-key': opts.key }, kids);
   return el('button', { type: 'button', class: cls, onclick: opts.onClick, disabled: opts.disabled, 'data-key': opts.key, 'aria-label': opts.ariaLabel }, kids);
 }
 
 function meter(value, max, label) {
-  const pct = max ? Math.round((value / max) * 100) : 0;
-  return el('div', { class: 'meter', role: 'progressbar', 'aria-valuemin': '0', 'aria-valuemax': String(max), 'aria-valuenow': String(value), 'aria-label': label }, [
-    el('span', { style: `width:${pct}%` })
-  ]);
+  return el('progress', { class: 'progress progress-primary meter', value: String(value), max: String(max || 1), 'aria-label': label });
 }
 
 function callout(tone, title, text) {
   const icons = { tip: 'bulb', rule: 'shield', custom: 'users', warn: 'alert', info: 'info' };
-  return el('aside', { class: 'callout callout-' + tone }, [
+  const tones = { tip: 'callout-neutral', rule: 'alert-success', custom: 'callout-neutral', warn: 'alert-error', info: 'alert-info' };
+  return el('aside', { class: `alert alert-soft ${tones[tone] ?? 'alert-info'} callout callout-${tone}`, role: 'note' }, [
     ic(icons[tone] || 'info', 'callout-icon'),
     el('div', {}, [
       title ? el('p', { class: 'callout-title', text: title }) : null,
@@ -336,7 +344,7 @@ const VIEWS = {
 };
 
 function updateShell(route, title) {
-  document.querySelectorAll('.tab').forEach((a) => {
+  document.querySelectorAll('.nav-tab').forEach((a) => {
     if (a.dataset.tab === route.tab) a.setAttribute('aria-current', 'page');
     else a.removeAttribute('aria-current');
   });
@@ -417,7 +425,7 @@ function viewHome() {
     ])
     : btn('Start a mixed review', { variant: 'light', href: '#/practice/mixed', icon: 'arrowRight', iconAfter: true });
 
-  frag.appendChild(el('section', { class: 'hero' }, [
+  frag.appendChild(el('section', { class: 'welcome' }, [
     el('div', { class: 'hero-tiles', 'aria-hidden': 'true' }, [
       tileEl('dragon-red', { caption: 'never' }), tileEl('dots-5', { caption: 'never' }), tileEl('joker', { caption: 'never' })
     ]),
@@ -429,7 +437,7 @@ function viewHome() {
     ])
   ]));
 
-  frag.appendChild(el('div', { class: 'stats' }, [
+  frag.appendChild(el('div', { class: 'stats stats-horizontal' }, [
     stat(`${s.lessons}/${s.lessonTotal}`, 'Lessons done'),
     stat(String(s.right), 'Questions right'),
     stat(s.tried ? Math.round((s.right / s.tried) * 100) + '%' : '—', 'Accuracy')
@@ -458,7 +466,7 @@ function viewHome() {
 }
 
 function stat(num, label) {
-  return el('div', { class: 'stat' }, [el('span', { class: 'stat-num', text: num }), el('span', { class: 'stat-label', text: label })]);
+  return el('div', { class: 'stat place-items-center' }, [el('span', { class: 'stat-value stat-num', text: num }), el('span', { class: 'stat-title stat-label', text: label })]);
 }
 
 /* ------------------ Learn ------------------ */
@@ -517,7 +525,7 @@ function renderBlock(b) {
     case 'p': return el('p', {}, [rich(b.text)]);
     case 'h': return el('h2', { text: b.text });
     case 'list': return el('ul', { class: 'bullets' }, b.items.map((t) => el('li', {}, [rich(t)])));
-    case 'steps': return el('ol', { class: 'steps' }, b.items.map((t) => el('li', {}, [rich(t)])));
+    case 'steps': return el('ol', { class: 'step-list' }, b.items.map((t) => el('li', {}, [rich(t)])));
     case 'tiles': return felt([tileRow(b.tiles, { caption: true })], { className: 'felt-compact' });
     case 'hand': return el('figure', { class: 'figure' }, [
       felt([handEl(b.groups)]),
@@ -529,7 +537,7 @@ function renderBlock(b) {
     ]);
     case 'callout': return callout(b.tone, b.title, b.text);
     case 'table': return el('div', { class: 'table-wrap' }, [
-      el('table', {}, [
+      el('table', { class: 'table' }, [
         el('thead', {}, [el('tr', {}, b.head.map((h) => el('th', { scope: 'col', text: h })))]),
         el('tbody', {}, b.rows.map((r) => el('tr', { class: r[1] === '' ? 'table-sub' : null }, r.map((c, i) => el('td', { colspan: r[1] === '' && i === 0 ? '2' : null }, [rich(c)])).filter((_, i) => !(r[1] === '' && i === 1)))))
       ])
@@ -544,7 +552,7 @@ function renderBlock(b) {
     case 'groups': return el('ul', { class: 'group-list' }, GROUP_NAMES.map((g) => el('li', { class: 'group-item' }, [
       el('div', { class: 'group-item-head' }, [
         el('strong', { text: g.name }),
-        el('span', { class: 'chip ' + (g.jokers ? 'chip-ok' : 'chip-bad') }, [ic(g.jokers ? 'check' : 'x', 'ic-sm'), g.jokers ? 'Jokers OK' : 'No Jokers'])
+        el('span', { class: g.jokers ? 'badge badge-soft badge-success chip' : 'badge badge-soft badge-error chip' }, [ic(g.jokers ? 'check' : 'x', 'ic-sm'), g.jokers ? 'Jokers OK' : 'No Jokers'])
       ]),
       felt([tileRow(g.tiles, { caption: 'never' })], { className: 'felt-compact' }),
       el('p', { text: g.note })
@@ -861,8 +869,8 @@ function viewQuiz(modeKey) {
   ]));
 
   const meta = el('div', { class: 'q-meta' }, [
-    el('span', { class: 'chip', text: DIFFICULTY[scn.difficulty] || 'Practice' }),
-    modeKey === 'mixed' ? el('span', { class: 'chip chip-soft' }, [ic(mode.icon, 'ic-sm'), mode.title]) : null
+    el('span', { class: 'badge badge-ghost chip', text: DIFFICULTY[scn.difficulty] || 'Practice' }),
+    modeKey === 'mixed' ? el('span', { class: 'badge badge-soft badge-primary chip' }, [ic(mode.icon, 'ic-sm'), mode.title]) : null
   ]);
 
   if (scn.mode === 'charleston') {
@@ -1020,7 +1028,7 @@ function viewCharlestonQuestion(scn, meta, resp) {
   const q = state.quiz;
   const rack = sortRack(hydrate(scn.state.rack, scn.id));
   const dirLabel = { right: 'to your right', across: 'across', left: 'to your left' }[scn.state.passDirection];
-  meta.appendChild(el('span', { class: 'chip chip-soft' }, [ic('repeat', 'ic-sm'), `Pass ${scn.state.passIndex} · ${dirLabel}`]));
+  meta.appendChild(el('span', { class: 'badge badge-soft badge-primary chip' }, [ic('repeat', 'ic-sm'), `Pass ${scn.state.passIndex} · ${dirLabel}`]));
   const section = el('section', { class: 'question', 'aria-labelledby': 'q-prompt' }, [
     meta,
     el('h2', { class: 'q-prompt', id: 'q-prompt', text: scn.prompt }),
@@ -1135,9 +1143,9 @@ function viewSandbox() {
         el('span', { class: 'bar-count', text: `${x.count} tile${x.count === 1 ? '' : 's'}` })
       ]))),
       el('div', { class: 'chips' }, [
-        el('span', { class: 'chip', text: `${L.pairs} pair${L.pairs === 1 ? '' : 's'}` }),
-        el('span', { class: 'chip', text: `${L.jokers} Joker${L.jokers === 1 ? '' : 's'}` }),
-        el('span', { class: 'chip', text: `${L.flowers} Flower${L.flowers === 1 ? '' : 's'}` })
+        el('span', { class: 'badge badge-ghost chip', text: `${L.pairs} pair${L.pairs === 1 ? '' : 's'}` }),
+        el('span', { class: 'badge badge-ghost chip', text: `${L.jokers} Joker${L.jokers === 1 ? '' : 's'}` }),
+        el('span', { class: 'badge badge-ghost chip', text: `${L.flowers} Flower${L.flowers === 1 ? '' : 's'}` })
       ]),
       el('p', { class: 'card-note' }, [rich(leaningAdvice(L, top))])
     ]);
@@ -1184,7 +1192,7 @@ function viewHands() {
     el('a', { class: 'family-card', href: '#/hands/' + f.id }, [
       el('span', { class: 'family-card-top' }, [
         el('span', { class: 'family-name', text: f.name }),
-        el('span', { class: 'chip chip-soft', text: f.difficulty })
+        el('span', { class: 'badge badge-soft badge-primary chip', text: f.difficulty })
       ]),
       el('span', { class: 'family-short', text: f.short }),
       notationEl(f.example.notation),
@@ -1338,18 +1346,19 @@ function viewMine() {
 
 function switchRow(key, label, description) {
   const on = !!state.settings[key];
-  return el('li', {}, [el('button', {
-    type: 'button', class: 'switch-row', role: 'switch', 'aria-checked': on ? 'true' : 'false', 'data-key': 'set-' + key,
-    onclick: () => {
-      state.settings[key] = !state.settings[key];
-      saveSettings(state.settings);
-      applySettings();
-      render({ focusKey: 'set-' + key });
-      announce(`${label} ${state.settings[key] ? 'on' : 'off'}.`);
-    }
-  }, [
+  const id = 'set-' + key;
+  return el('li', {}, [el('label', { class: 'switch-row', for: id }, [
     el('span', { class: 'switch-text' }, [el('span', { class: 'switch-label', text: label }), el('span', { class: 'switch-desc', text: description })]),
-    el('span', { class: 'switch', 'aria-hidden': 'true' })
+    el('input', {
+      type: 'checkbox', id, class: 'toggle toggle-primary toggle-lg', role: 'switch', checked: on, 'data-key': id,
+      onchange: (e) => {
+        state.settings[key] = e.target.checked;
+        saveSettings(state.settings);
+        applySettings();
+        render({ focusKey: id });
+        announce(`${label} ${state.settings[key] ? 'on' : 'off'}.`);
+      }
+    })
   ])]);
 }
 

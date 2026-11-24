@@ -36,6 +36,21 @@ GitHub Pages serves `.js` with the correct MIME type, so `type="module"` works a
 After an update, bump the `?v=` number on the stylesheet and entry script in `index.html`
 if a browser seems to be holding an old copy.
 
+## Styles
+
+Components (buttons, cards, badges, alerts, inputs, toggles, progress bars, stats,
+tables and the confirm dialog) come from [daisyUI](https://daisyui.com) on Tailwind CSS.
+The compiled `daisy.css` is committed, so the site still deploys with no build step.
+After adding or changing daisyUI classes in `index.html` or `js/`, rebuild it:
+
+```
+npm install
+npm run build:css
+```
+
+The theme (white surfaces, jade primary) lives in `css/tailwind.css`;
+layout and app-specific styles stay in `styles.css`.
+
 ## File tree
 
 ```

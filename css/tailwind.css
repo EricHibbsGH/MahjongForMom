@@ -1,0 +1,50 @@
+/* Source for daisy.css. Rebuild with `npm run build:css` after changing classes.
+   Tailwind's preflight reset is left out on purpose: styles.css owns the base styles. */
+@layer theme, base, components, utilities;
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/utilities.css" layer(utilities) source(none);
+
+@source "../index.html";
+@source "../js";
+
+@plugin "daisyui" {
+  themes: false;
+  logs: false;
+}
+
+@plugin "daisyui/theme" {
+  name: "mahjong";
+  default: true;
+  prefersdark: false;
+  color-scheme: light;
+
+  --color-base-100: #ffffff;
+  --color-base-200: #f5f6f7;
+  --color-base-300: #e3e6e8;
+  --color-base-content: #1e2a24;
+  --color-primary: #1e5b45;
+  --color-primary-content: #ffffff;
+  --color-secondary: #a8322d;
+  --color-secondary-content: #ffffff;
+  --color-accent: #9a6f1e;
+  --color-accent-content: #ffffff;
+  --color-neutral: #1e2a24;
+  --color-neutral-content: #ffffff;
+  --color-info: #1d4f91;
+  --color-info-content: #ffffff;
+  --color-success: #1e7a4c;
+  --color-success-content: #ffffff;
+  --color-warning: #9a6f1e;
+  --color-warning-content: #ffffff;
+  --color-error: #b3261e;
+  --color-error-content: #ffffff;
+
+  --radius-selector: 1rem;
+  --radius-field: 0.75rem;
+  --radius-box: 1rem;
+  --size-selector: 0.28rem;
+  --size-field: 0.28rem;
+  --border: 1px;
+  --depth: 0;
+  --noise: 0;
+}

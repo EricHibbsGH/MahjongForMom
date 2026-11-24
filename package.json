@@ -1,0 +1,13 @@
+{
+  "name": "mahjongg-practice",
+  "private": true,
+  "description": "Builds daisy.css (Tailwind + daisyUI components). The app itself has no build step.",
+  "scripts": {
+    "build:css": "tailwindcss -i ./css/tailwind.css -o ./daisy.css --minify"
+  },
+  "devDependencies": {
+    "@tailwindcss/cli": "^4.3.5",
+    "daisyui": "^5.8.2",
+    "tailwindcss": "^4.3.5"
+  }
+}
